@@ -6,15 +6,18 @@ import { PrismaService } from '../prisma/prisma.service';
 describe('PacientesService', () => {
   let service: PacientesService;
 
-  const mockPrisma = {
-    paciente: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-    },
-  };
+const mockPrisma = {
+  paciente: {
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
+  cita: {
+    deleteMany: jest.fn(),
+  },
+};
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -68,11 +71,13 @@ describe('PacientesService', () => {
   });
 
   it('remove debe eliminar un paciente existente', async () => {
-    mockPrisma.paciente.findUnique.mockResolvedValue({ id: 1 });
-    mockPrisma.paciente.delete.mockResolvedValue({ id: 1 });
+  mockPrisma.paciente.findUnique.mockResolvedValue({ id: 1 });
+  mockPrisma.cita.deleteMany.mockResolvedValue({ count: 0 });
+  mockPrisma.paciente.delete.mockResolvedValue({ id: 1 });
 
-    const result = await service.remove(1);
+  const result = await service.remove(1);
 
-    expect(result).toEqual({ id: 1 });
-  });
+  expect(result).toEqual({ id: 1 });
+  expect(mockPrisma.cita.deleteMany).toHaveBeenCalledWith({ where: { pacienteId: 1 } });
+});
 });
